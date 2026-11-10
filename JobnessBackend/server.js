@@ -8,9 +8,6 @@ const helmet = require('helmet');
 const {xss} = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
-//swagger
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
 
 // Load env vars
 dotenv.config({ path: './config/config.env' });
@@ -19,24 +16,6 @@ dotenv.config({ path: './config/config.env' });
 connectDB();
 
 const app = express();
-
-// Swagger setup
-const swaggerOptions = {
-    swaggerDefinition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Library API',
-            version: '1.0.0',
-            description: 'A simple Express VacQ API'
-        },
-        servers: [
-            {
-                url: 'http://localhost:5000/api/v1'
-            }
-        ],
-    },
-    apis: ['./routes/*.js']
-};
 
 // Body parser
 app.use(express.json());
@@ -66,21 +45,18 @@ app.use(hpp());
 // Enable CORS
 app.use(cors());
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 // Enable extended query string parsing
 app.set('query parser', 'extended');
 
 //Route files
-const hospitals = require('./routes/hospitals');
+const companies = require('./routes/companies');
 const auth = require('./routes/auth');
-const appointments = require('./routes/appointments');
+const interviews = require('./routes/interviews');
 
 //Mount routers
-app.use('/api/v1/hospitals', hospitals);
+app.use('/api/v1/companies', companies);
 app.use('/api/v1/auth',auth);
-app.use('/api/v1/appointments', appointments);
+app.use('/api/v1/interviews', interviews);
 
 const PORT = process.env.PORT || 5000;
 

@@ -21,7 +21,7 @@ exports.getCompanies = async (req, res) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
-    query = Company.find(JSON.parse(queryStr)).populate('Interviews');
+    query = Company.find(JSON.parse(queryStr)).populate('interviews');
 
     //Select Fields
     if (req.query.select) {

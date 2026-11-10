@@ -1,6 +1,6 @@
 const express = require('express');
 
-const {getInterviews, getInterview, addInterview, updateInterview, deleteInterview} = require('../controllers/Interviews');
+const {getInterviews, getInterview, addInterview, updateInterview, deleteInterview} = require('../controllers/interviews');
 
 const router = express.Router({mergeParams: true});
 

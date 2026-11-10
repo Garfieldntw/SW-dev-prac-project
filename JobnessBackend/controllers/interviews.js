@@ -1,145 +1,159 @@
-const Appointment = require('../models/Appointment');
-const Hospital = require('../models/Hospital');
+const Interview = require('../models/Interview');
+const Company = require('../models/Company');
 
-// @desc    Get all appointments
-// @route   GET /api/v1/appointments
+// @desc    Get all interviews
+// @route   GET /api/v1/interviews
 // @access  Public
-exports.getAppointments = async (req, res, next) => {
+exports.getInterviews = async (req, res, next) => {
     let query;
 
-    if(req.user.role !== 'admin'){ //General users can see only their appointments!
-        query = Appointment.find({user: req.user.id}).populate({
-            path: 'hospital',
-            select: 'name province tel'
+    if(req.user.role !== 'admin'){ //General users can see only their interviews!
+        query = Interview.find({user: req.user.id}).populate({
+            path: 'company',
+            select: 'name description tel'
         });
-    } else { //If you are an admin, you can see all appointments!
-        if(req.params.hospitalId){
-            console.log(req.params.hospitalId);
-            query = Appointment.find({hospital: req.params.hospitalId}).populate({
-                path: 'hospital',
-                select: 'name province tel'
+    } else { //If you are an admin, you can see all interviews!
+        if(req.params.companyId){
+            console.log(req.params.companyId);
+            query = Interview.find({company: req.params.companyId}).populate({
+                path: 'company',
+                select: 'name description tel'
             });
         } else {
-            query = Appointment.find().populate({
-                path: 'hospital',
-                select: 'name province tel'
+            query = Interview.find().populate({
+                path: 'company',
+                select: 'name description tel'
             });
         }
     }
     try {
-        const appointments = await query;
-        res.status(200).json({ success: true, count: appointments.length, data: appointments });
+        const interviews = await query;
+        res.status(200).json({ success: true, count: interviews.length, data: interviews });
     } catch (err) {
         console.log(err.stack);
-        res.status(500).json({ success: false, message: 'Cannot find Appointment' })
+        res.status(500).json({ success: false, message: 'Cannot find interview' })
     }
 }
 
-// @desc    Get single appointment
-// @route   GET /api/v1/appointments/:id
+// @desc    Get single interview
+// @route   GET /api/v1/interviews/:id
 // @access  Public
-exports.getAppointment = async (req, res, next) => {
+exports.getInterview = async (req, res, next) => {
     try {
-        const appointment = await Appointment.findById(req.params.id).populate({
-            path: 'hospital',
+        const interview = await Interview.findById(req.params.id).populate({
+            path: 'company',
             select: 'name description tel'
         });
 
-        if (!appointment) {
-            return res.status(404).json({ success: false, message: `No appointment found with id of ${req.params.id}` });
+        if (!interview) {
+            return res.status(404).json({ success: false, message: `No interview found with id of ${req.params.id}` });
         }
 
-        res.status(200).json({ success: true, data: appointment });
+        res.status(200).json({ success: true, data: interview });
 
     } catch (err) {
         console.log(err.stack);
-        res.status(500).json({ success: false, message: 'Cannot find Appointment' })
+        res.status(500).json({ success: false, message: 'Cannot find interview' })
     }
 };
 
-// @desc    Add single appointment
-// @route   POST /api/v1/hospitals/:hospitalId/appointments
+// @desc    Add single interview
+// @route   POST /api/v1/companies/:interviewId/interviews
 // @access  Private
-exports.addAppointment = async (req, res, next) => {
+exports.addInterview = async (req, res, next) => {
     try {
         //add user Id to req.body
         req.body.user = req.user.id;
 
-        //check for existed appointment
-        const existedAppointment = await Appointment.find({user: req.user.id});
+        // Parse the JSON date string before comparing dates.
+        const interviewDate = new Date(req.body.interviewDate);
+        if (typeof req.body.interviewDate !== 'string' || Number.isNaN(interviewDate.getTime())) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid interview date' });
+        }
 
-        //If the user is not an admin, they can onlt create 3 appointments
-        if(existedAppointment.length >= 3 && req.user.role !== 'admin'){
-            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 appointments` });
+        // Use UTC boundaries and an exclusive end to include all of May 13.
+        const startDate = new Date('2022-05-10T00:00:00.000Z');
+        const endDate = new Date('2022-05-14T00:00:00.000Z');
+        if (interviewDate < startDate || interviewDate >= endDate) {
+            return res.status(400).json({ success: false, message: 'Interview date must be between May 10th and 13th, 2022' });
+        }
+        req.body.interviewDate = interviewDate;
+
+        //check for existed interview
+        const existedinterview = await Interview.find({user: req.user.id});
+
+        //If the user is not an admin, they can only create 3 interviews
+        if(existedinterview.length >= 3 && req.user.role !== 'admin'){
+            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already booked 3 interviews` });
         }
         
-        req.body.hospital = req.params.hospitalId;
+        req.body.company = req.params.companyId;
 
-        const hospital = await Hospital.findById(req.params.hospitalId);
+        const company = await Company.findById(req.params.companyId);
 
-        if (!hospital) {
-            return res.status(404).json({ success: false, message: `No hospital with the id of ${req.params.hospitalId}` });
+        if (!company) {
+            return res.status(404).json({ success: false, message: `No company with the id of ${req.params.companyId}` });
         }
 
-        const appointment = await Appointment.create(req.body);
+        const interview = await Interview.create(req.body);
 
-        res.status(201).json({ success: true, data: appointment });
+        res.status(201).json({ success: true, data: interview });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Cannot create Appointment' })
+        res.status(500).json({ success: false, message: 'Cannot create interview' })
     }
 };
 
-// @desc    Update appointment
-// @route   PUT /api/v1/appointments/:id
+// @desc    Update interview
+// @route   PUT /api/v1/interviews/:id
 // @access  Private
-exports.updateAppointment = async (req, res, next) => {
+exports.updateInterview = async (req, res, next) => {
     try {
 
-        let appointment = await Appointment.findById(req.params.id);
+        let interview = await Interview.findById(req.params.id);
 
-        if (!appointment) {
-            return res.status(404).json({ success: false, message: `No appointment with the id of ${req.params.id}` });
+        if (!interview) {
+            return res.status(404).json({ success: false, message: `No interview with the id of ${req.params.id}` });
         }
 
-        //Make sure user is the appointment owner
-        if(appointment.user.toString() !== req.user.id && req.user.role !== 'admin'){
-            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this appointment` });
+        //Make sure user is the interview owner
+        if(interview.user.toString() !== req.user.id && req.user.role !== 'admin'){
+            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this interview` });
         }
 
-        appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
+        interview = await Interview.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
 
-        res.status(200).json({ success: true, data: appointment });
+        res.status(200).json({ success: true, data: interview });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Cannot update Appointment' })
+        res.status(500).json({ success: false, message: 'Cannot update interview' })
     }
 };
 
-// @desc    Delete appointment
-// @route   DELETE /api/v1/appointments/:id
+// @desc    Delete interview
+// @route   DELETE /api/v1/interviews/:id
 // @access  Private
-exports.deleteAppointment = async (req, res, next) => {
+exports.deleteInterview = async (req, res, next) => {
     try {
-        const appointment = await Appointment.findById(req.params.id);
+        const interview = await Interview.findById(req.params.id);
 
-        if (!appointment) {
-            return res.status(404).json({ success: false, message: `No appointment with the id of ${req.params.id}` });
+        if (!interview) {
+            return res.status(404).json({ success: false, message: `No interview with the id of ${req.params.id}` });
         }
 
-        //Make sure user is the appointment owner
-        if(appointment.user.toString() !== req.user.id && req.user.role !== 'admin'){
-            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this appointment` });
+        //Make sure user is the interview owner
+        if(interview.user.toString() !== req.user.id && req.user.role !== 'admin'){
+            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this interview` });
         }
 
-        await appointment.deleteOne();
+        await interview.deleteOne();
 
         res.status(200).json({ success: true, data: {} });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Cannot delete Appointment' })
+        res.status(500).json({ success: false, message: 'Cannot delete interview' })
     }
 };
