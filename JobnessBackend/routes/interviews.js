@@ -1,17 +1,17 @@
 const express = require('express');
 
-const {getAppointments, getAppointment, addAppointment, updateAppointment, deleteAppointment} = require('../controllers/appointments');
+const {getInterviews, getInterview, addInterview, updateInterview, deleteInterview} = require('../controllers/Interviews');
 
 const router = express.Router({mergeParams: true});
 
 const {protect,authorize} = require('../middleware/auth');
 
 router.route('/')
-    .get(protect,getAppointments)
-    .post(protect, authorize('admin','user'), addAppointment);
+    .get(protect,getInterviews)
+    .post(protect, authorize('admin','user'), addInterview);
 router.route('/:id')
-    .get(getAppointment)
-    .put(protect,authorize('admin','user'), updateAppointment)
-    .delete(protect,authorize('admin','user'), deleteAppointment);
+    .get(getInterview)
+    .put(protect,authorize('admin','user'), updateInterview)
+    .delete(protect,authorize('admin','user'), deleteInterview);
 
 module.exports = router;
