@@ -32,7 +32,7 @@ const CompanySchema = new mongoose.Schema(
 );
 
 //Reverse populate with virtuals
-HospitalSchema.virtual('interviews',{
+CompanySchema.virtual('interviews',{
     ref: 'Interview',
     localField: '_id',
     foreignField: 'company',
