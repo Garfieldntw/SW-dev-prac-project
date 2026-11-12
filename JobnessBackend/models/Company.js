@@ -11,6 +11,28 @@ const CompanySchema = new mongoose.Schema(
     address: {
       type: String,
       required: [true, "Please add an address"],
+      trim: true,
+    },
+    // Optional for existing companies; populated from the external API on writes.
+    location: {
+      type: new mongoose.Schema({
+        type: { type: String, enum: ["Point"], required: true },
+        coordinates: {
+          type: [Number],
+          required: true,
+          validate: {
+            validator: function (values) {
+              return values.length === 2 &&
+                values.every(Number.isFinite) &&
+                Math.abs(values[0]) <= 180 &&
+                Math.abs(values[1]) <= 90;
+            },
+            message: "Location must contain valid [longitude, latitude] coordinates"
+          }
+        },
+        formattedAddress: String
+      }, { _id: false }),
+      default: undefined
     },
     website: {
       type: String,
