@@ -10,7 +10,7 @@ router.route('/')
     .get(protect,getInterviews)
     .post(protect, authorize('admin','user'), addInterview);
 router.route('/:id')
-    .get(getInterview)
+    .get(protect, getInterview)
     .put(protect,authorize('admin','user'), updateInterview)
     .delete(protect,authorize('admin','user'), deleteInterview);
 
