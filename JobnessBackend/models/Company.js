@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+// Allowed industry values (shared with the search filter in controllers/companies.js)
+const INDUSTRIES = [
+  "Software",
+  "Finance",
+  "Engineering",
+  "Manufacturing",
+  "Healthcare",
+  "Retail",
+  "Consulting",
+  "Education",
+  "Energy",
+  "Logistics",
+  "Media",
+  "Other",
+];
+
 const CompanySchema = new mongoose.Schema(
   {
     name: {
@@ -34,6 +50,14 @@ const CompanySchema = new mongoose.Schema(
       }, { _id: false }),
       default: undefined
     },
+    industry: {
+      type: String,
+      required: [true, "Please add an industry"],
+      enum: {
+        values: INDUSTRIES,
+        message: `Industry must be one of: ${INDUSTRIES.join(", ")}`,
+      },
+    },
     website: {
       type: String,
       required: [true, "Please add a website"],
@@ -53,6 +77,9 @@ const CompanySchema = new mongoose.Schema(
   },
 );
 
+//Geospatial index for distance search on location ([longitude, latitude])
+CompanySchema.index({ location: "2dsphere" });
+
 //Reverse populate with virtuals
 CompanySchema.virtual('interviews',{
     ref: 'Interview',
@@ -61,4 +88,7 @@ CompanySchema.virtual('interviews',{
     justOne: false
 });
 
-module.exports = mongoose.model("Company", CompanySchema);
+const Company = mongoose.model("Company", CompanySchema);
+Company.INDUSTRIES = INDUSTRIES;
+
+module.exports = Company;
