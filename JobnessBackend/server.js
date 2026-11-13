@@ -52,13 +52,11 @@ app.set('query parser', 'extended');
 const companies = require('./routes/companies');
 const auth = require('./routes/auth');
 const interviews = require('./routes/interviews');
-const locations = require('./routes/locations');
 
 //Mount routers
 app.use('/api/v1/companies', companies);
 app.use('/api/v1/auth',auth);
 app.use('/api/v1/interviews', interviews);
-app.use('/api/v1/locations', locations);
 
 const PORT = process.env.PORT || 5000;
 

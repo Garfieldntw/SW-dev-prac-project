@@ -5,7 +5,7 @@ class GeocodingError extends Error {
     }
 }
 
-// Shared by company writes and the location lookup endpoint.
+// Shared by company creation, address updates, and company search.
 async function geocode(query) {
     if (typeof query !== 'string' || query.trim().length < 2) {
         throw new GeocodingError('Please provide an address or place name of at least two characters', 400);
