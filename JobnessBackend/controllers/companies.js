@@ -27,6 +27,7 @@ function companyWriteError(res, error) {
 
 // Mean Earth radius in km; $centerSphere takes its radius in radians (distance / Earth radius).
 const EARTH_RADIUS_KM = 6378.1;
+const DEFAULT_RADIUS_KM = 5;
 
 // Query parameters handled by getCompanies itself, not by the generic field filter.
 const customParams = ['select', 'sort', 'page', 'limit', 'name', 'industry', 'address', 'lat', 'lng', 'radiusKm'];
@@ -42,6 +43,11 @@ const toNumber = (text) => (text !== '' && Number.isFinite(Number(text)) ? Numbe
 
 // Builds the search filter from req.query. Returns { filter } or { error } (a 400 message).
 const buildCompanyFilter = async (query) => {
+    // Apply the default only when a location is supplied and the radius is omitted.
+    const hasLocation = ['address', 'lat', 'lng'].some(field => query[field] !== undefined);
+    if (hasLocation && query.radiusKm === undefined) {
+        query = { ...query, radiusKm: String(DEFAULT_RADIUS_KM) };
+    }
     const reqQuery = { ...query };
     customParams.forEach(param => delete reqQuery[param]);
 
@@ -100,7 +106,7 @@ const buildCompanyFilter = async (query) => {
     const supplied = geoParams.filter(p => searchQuery[p] !== undefined);
     if (supplied.length > 0) {
         if (supplied.length < geoParams.length) {
-            return { error: 'Provide address and radiusKm, or lat, lng and radiusKm together' };
+            return { error: 'Provide an address, or both lat and lng, for the search location' };
         }
         const lat = toNumber(queryText(searchQuery.lat));
         const lng = toNumber(queryText(searchQuery.lng));
