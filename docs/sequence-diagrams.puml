@@ -1,0 +1,551 @@
+' Sequence Diagrams — Jobness Backend
+' One @startuml block per API operation; each renders to its own image.
+' Derived from JobnessBackend/server.js, routes, middleware, controllers, models and services.
+
+' ============================================================
+' AUTH
+' ============================================================
+
+@startuml seq-01-register
+title Register (POST /api/v1/auth/register)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:auth" as routerAuth
+participant "<<controllers>>\n:auth" as ctrlAuth
+participant "<<model>>\n:User" as modelUser
+database "<<MongoDB>>\n:users" as dbUsers
+
+client -> server ++ : req.post('/api/v1/auth/register')
+server -> routerAuth ++ : app.use('/api/v1/auth', auth)
+routerAuth -> ctrlAuth ++ : register()
+ctrlAuth -> modelUser ++ : create({name, telephone, email, password, role})
+modelUser -> modelUser : pre('save'): bcrypt.hash(password)
+modelUser -> dbUsers ++ : UserSchema
+alt validation error / duplicate email
+  dbUsers --> modelUser : error
+  modelUser --> ctrlAuth : error
+  ctrlAuth --> client : 400 {success: false}
+else success
+  dbUsers --> modelUser -- : user
+  modelUser --> ctrlAuth -- : user
+  ctrlAuth -> modelUser ++ : user.getSignedJwtToken()
+  modelUser --> ctrlAuth -- : token
+  ctrlAuth --> client -- : 201 cookie(token) + {success, _id, name, email, token}
+end
+@enduml
+
+@startuml seq-02-login
+title Login (POST /api/v1/auth/login)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:auth" as routerAuth
+participant "<<controllers>>\n:auth" as ctrlAuth
+participant "<<model>>\n:User" as modelUser
+database "<<MongoDB>>\n:users" as dbUsers
+
+client -> server ++ : req.post('/api/v1/auth/login')
+server -> routerAuth ++ : app.use('/api/v1/auth', auth)
+routerAuth -> ctrlAuth ++ : login()
+alt email or password missing
+  ctrlAuth --> client : 400 {msg: "Please provide an email and password"}
+else
+  ctrlAuth -> modelUser ++ : findOne({email}).select('+password')
+  modelUser -> dbUsers ++ : UserSchema
+  dbUsers --> modelUser -- : user
+  modelUser --> ctrlAuth -- : user
+  alt user not found
+    ctrlAuth --> client : 401 {msg: "Invalid credentials"}
+  else
+    ctrlAuth -> modelUser ++ : user.matchPassword(password)
+    modelUser --> ctrlAuth -- : isMatch (bcrypt.compare)
+    alt password does not match
+      ctrlAuth --> client : 401 {msg: "Invalid credentials"}
+    else
+      ctrlAuth -> modelUser ++ : user.getSignedJwtToken()
+      modelUser --> ctrlAuth -- : token
+      ctrlAuth --> client -- : 200 cookie(token) + {success, _id, name, email, token}
+    end
+  end
+end
+@enduml
+
+@startuml seq-03-get-me
+title Get Current User (GET /api/v1/auth/me)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:auth" as routerAuth
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:auth" as ctrlAuth
+participant "<<model>>\n:User" as modelUser
+database "<<MongoDB>>\n:users" as dbUsers
+
+client -> server ++ : req.get('/api/v1/auth/me')\nAuthorization: Bearer <token>
+server -> routerAuth ++ : app.use('/api/v1/auth', auth)
+routerAuth -> mwAuth ++ : protect()
+mwAuth -> mwAuth : jwt.verify(token)
+alt no token / invalid token
+  mwAuth --> client : 401 {msg: "Not authorized to access this route"}
+else
+  mwAuth -> modelUser ++ : findById(decoded.id)
+  modelUser -> dbUsers ++ : UserSchema
+  dbUsers --> modelUser -- : user
+  modelUser --> mwAuth -- : req.user
+  mwAuth --> routerAuth -- : next()
+  routerAuth -> ctrlAuth ++ : getMe()
+  ctrlAuth -> modelUser ++ : findById(req.user.id)
+  modelUser -> dbUsers ++ : UserSchema
+  dbUsers --> modelUser -- : user
+  modelUser --> ctrlAuth -- : user
+  ctrlAuth --> client -- : 200 {success, data: user}
+end
+@enduml
+
+@startuml seq-04-logout
+title Logout (GET /api/v1/auth/logout)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:auth" as routerAuth
+participant "<<controllers>>\n:auth" as ctrlAuth
+
+client -> server ++ : req.get('/api/v1/auth/logout')
+server -> routerAuth ++ : app.use('/api/v1/auth', auth)
+routerAuth -> ctrlAuth ++ : logout()
+ctrlAuth -> ctrlAuth : res.cookie('token', 'none', expires in 10s)
+ctrlAuth --> client -- : 200 {success, data: {}}
+@enduml
+
+' ============================================================
+' COMPANIES
+' ============================================================
+
+@startuml seq-05-get-companies
+title Get Companies with Search (GET /api/v1/companies?name=&industry=&address=&radiusKm=)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:companies" as ctrlCompanies
+participant "<<service>>\n:geocoding" as svcGeo
+participant "<<external API>>\n:OpenCage" as openCage
+participant "<<model>>\n:Company" as modelCompany
+database "<<MongoDB>>\n:companies" as dbCompanies
+
+client -> server ++ : req.get('/api/v1/companies?...')\nAuthorization: Bearer <token>
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> mwAuth ++ : protect()
+alt no token / invalid token
+  mwAuth --> client : 401 {msg: "Not authorized to access this route"}
+else
+  mwAuth --> routerCompanies -- : next() (req.user set)
+  routerCompanies -> ctrlCompanies ++ : getCompanies()
+  ctrlCompanies -> ctrlCompanies : buildCompanyFilter(req.query)\nname -> $regex, industry -> $in
+  opt address in query
+    alt address < 2 chars / lat or lng also given / radiusKm missing or not positive
+      ctrlCompanies --> client : 400 {message: error}
+    else
+      ctrlCompanies -> svcGeo ++ : geocode(address)
+      svcGeo -> openCage ++ : GET /geocode/v1/json?q=address&limit=5
+      openCage --> svcGeo -- : results
+      alt API key missing / API error / timeout / invalid response
+        svcGeo --> ctrlCompanies : GeocodingError (502 / 503 / 504)
+        ctrlCompanies --> client : 502 / 503 / 504 {message}
+      else
+        svcGeo --> ctrlCompanies -- : [{label, latitude, longitude}]
+        alt 0 or more than 1 match
+          ctrlCompanies --> client : 422 {message: "...please provide a more specific address"}
+        else exactly 1 match
+          ctrlCompanies -> ctrlCompanies : lat, lng = match.latitude, match.longitude
+        end
+      end
+    end
+  end
+  ctrlCompanies -> ctrlCompanies : lat/lng/radiusKm -> $geoWithin $centerSphere
+  alt invalid query (bad industry / incomplete or invalid lat, lng, radiusKm)
+    ctrlCompanies --> client : 400 {message: error}
+  else
+    ctrlCompanies -> modelCompany ++ : countDocuments(filter)
+    modelCompany -> dbCompanies ++ : CompanySchema
+    dbCompanies --> modelCompany -- : total
+    modelCompany --> ctrlCompanies -- : total
+    ctrlCompanies -> modelCompany ++ : find(filter).populate('interviews')\n.select().sort().skip().limit()
+    modelCompany -> dbCompanies ++ : CompanySchema
+    dbCompanies --> modelCompany -- : companies
+    modelCompany --> ctrlCompanies -- : companies
+    ctrlCompanies -> ctrlCompanies : build pagination {next, prev}
+    ctrlCompanies --> client -- : 200 {success, count, total, pagination, data}
+  end
+end
+@enduml
+
+@startuml seq-06-get-company
+title Get Single Company (GET /api/v1/companies/:id)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<controllers>>\n:companies" as ctrlCompanies
+participant "<<model>>\n:Company" as modelCompany
+database "<<MongoDB>>\n:companies" as dbCompanies
+
+client -> server ++ : req.get('/api/v1/companies/:id')
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> ctrlCompanies ++ : getCompany()
+ctrlCompanies -> modelCompany ++ : findById(req.params.id)
+modelCompany -> dbCompanies ++ : CompanySchema
+dbCompanies --> modelCompany -- : company
+modelCompany --> ctrlCompanies -- : company
+alt company not found / invalid id
+  ctrlCompanies --> client : 400 {success: false}
+else
+  ctrlCompanies --> client -- : 200 {success, data: company}
+end
+@enduml
+
+@startuml seq-07-create-company
+title Create Company (POST /api/v1/companies) — admin only
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:companies" as ctrlCompanies
+participant "<<service>>\n:geocoding" as svcGeo
+participant "<<external API>>\n:OpenCage" as openCage
+participant "<<model>>\n:Company" as modelCompany
+database "<<MongoDB>>\n:companies" as dbCompanies
+
+client -> server ++ : req.post('/api/v1/companies')\nAuthorization: Bearer <token>
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> mwAuth ++ : protect()
+mwAuth -> mwAuth : authorize('admin')
+alt not logged in
+  mwAuth --> client : 401 {msg: "Not authorized to access this route"}
+else role is not admin
+  mwAuth --> client : 403 {msg: "User role ... is not authorized"}
+else
+  mwAuth --> routerCompanies -- : next()
+  routerCompanies -> ctrlCompanies ++ : createCompany()
+  ctrlCompanies -> modelCompany ++ : new Company(companyInput(req.body))
+  modelCompany --> ctrlCompanies -- : company
+  ctrlCompanies -> modelCompany ++ : company.validate()
+  modelCompany --> ctrlCompanies -- : ok / ValidationError
+  alt ValidationError (missing field / invalid industry)
+    ctrlCompanies --> client : 400 {message: "Invalid or duplicate company data"}
+  else
+    ctrlCompanies -> svcGeo ++ : geocodeAddress(company.address)
+    svcGeo -> openCage ++ : GET /geocode/v1/json?q=address
+    openCage --> svcGeo -- : results
+    alt API unavailable / timeout / invalid response
+      svcGeo --> ctrlCompanies : GeocodingError (502 / 503 / 504)
+      ctrlCompanies --> client : 502 / 503 / 504 {message}
+    else 0 or more than 1 match
+      svcGeo --> ctrlCompanies : GeocodingError (422)
+      ctrlCompanies --> client : 422 {message: "...more specific company address"}
+    else exactly 1 match
+      svcGeo --> ctrlCompanies -- : {type: "Point", coordinates: [lng, lat], formattedAddress}
+      ctrlCompanies -> modelCompany ++ : company.location = location\ncompany.save()
+      modelCompany -> dbCompanies ++ : CompanySchema
+      dbCompanies --> modelCompany -- : company
+      modelCompany --> ctrlCompanies -- : company
+      alt duplicate company name
+        ctrlCompanies --> client : 400 {message: "Invalid or duplicate company data"}
+      else
+        ctrlCompanies --> client -- : 201 {success, data: company}
+      end
+    end
+  end
+end
+@enduml
+
+@startuml seq-08-update-company
+title Update Company (PUT /api/v1/companies/:id) — admin only
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:companies" as ctrlCompanies
+participant "<<service>>\n:geocoding" as svcGeo
+participant "<<external API>>\n:OpenCage" as openCage
+participant "<<model>>\n:Company" as modelCompany
+database "<<MongoDB>>\n:companies" as dbCompanies
+
+client -> server ++ : req.put('/api/v1/companies/:id')\nAuthorization: Bearer <token>
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> mwAuth ++ : protect(), authorize('admin')
+alt not logged in / not admin
+  mwAuth --> client : 401 / 403
+else
+  mwAuth --> routerCompanies -- : next()
+  routerCompanies -> ctrlCompanies ++ : updateCompany()
+  ctrlCompanies -> modelCompany ++ : findById(req.params.id)
+  modelCompany -> dbCompanies ++ : CompanySchema
+  dbCompanies --> modelCompany -- : company
+  modelCompany --> ctrlCompanies -- : company
+  alt company not found
+    ctrlCompanies --> client : 400 {success: false}
+  else
+    ctrlCompanies -> modelCompany ++ : company.set(companyInput(req.body))\ncompany.validate()
+    modelCompany --> ctrlCompanies -- : ok / ValidationError
+    opt address changed OR (no location yet AND address sent)
+      ctrlCompanies -> svcGeo ++ : geocodeAddress(company.address)
+      svcGeo -> openCage ++ : GET /geocode/v1/json?q=address
+      openCage --> svcGeo -- : results
+      svcGeo --> ctrlCompanies -- : location / GeocodingError (422, 502-504)
+    end
+    ctrlCompanies -> modelCompany ++ : company.save()
+    modelCompany -> dbCompanies ++ : CompanySchema
+    dbCompanies --> modelCompany -- : company
+    modelCompany --> ctrlCompanies -- : company
+    ctrlCompanies --> client -- : 200 {success, data: company}
+  end
+end
+@enduml
+
+@startuml seq-09-delete-company
+title Delete Company (DELETE /api/v1/companies/:id) — admin only
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:companies" as ctrlCompanies
+participant "<<model>>\n:Company" as modelCompany
+participant "<<model>>\n:Interview" as modelInterview
+database "<<MongoDB>>\n:companies" as dbCompanies
+database "<<MongoDB>>\n:interviews" as dbInterviews
+
+client -> server ++ : req.delete('/api/v1/companies/:id')\nAuthorization: Bearer <token>
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> mwAuth ++ : protect(), authorize('admin')
+alt not logged in / not admin
+  mwAuth --> client : 401 / 403
+else
+  mwAuth --> routerCompanies -- : next()
+  routerCompanies -> ctrlCompanies ++ : deleteCompany()
+  ctrlCompanies -> modelCompany ++ : findById(req.params.id)
+  modelCompany -> dbCompanies ++ : CompanySchema
+  dbCompanies --> modelCompany -- : company
+  modelCompany --> ctrlCompanies -- : company
+  alt company not found
+    ctrlCompanies --> client : 404 {message: "Company not found with id of ..."}
+  else
+    ctrlCompanies -> modelInterview ++ : deleteMany({company: id})
+    modelInterview -> dbInterviews ++ : InterviewSchema
+    dbInterviews --> modelInterview -- : deleted
+    modelInterview --> ctrlCompanies --
+    ctrlCompanies -> modelCompany ++ : deleteOne({_id: id})
+    modelCompany -> dbCompanies ++ : CompanySchema
+    dbCompanies --> modelCompany -- : deleted
+    modelCompany --> ctrlCompanies --
+    ctrlCompanies --> client -- : 200 {success, data: {}}
+  end
+end
+@enduml
+
+' ============================================================
+' INTERVIEWS
+' ============================================================
+
+@startuml seq-10-get-interviews
+title Get Interviews (GET /api/v1/interviews  or  /api/v1/companies/:companyId/interviews)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:interviews" as routerInterviews
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:interviews" as ctrlInterviews
+participant "<<model>>\n:Interview" as modelInterview
+database "<<MongoDB>>\n:interviews" as dbInterviews
+
+client -> server ++ : req.get('/api/v1/interviews')\nAuthorization: Bearer <token>
+server -> routerInterviews ++ : app.use('/api/v1/interviews', interviews)
+routerInterviews -> mwAuth ++ : protect()
+alt no token / invalid token
+  mwAuth --> client : 401
+else
+  mwAuth --> routerInterviews -- : next()
+  routerInterviews -> ctrlInterviews ++ : getInterviews()
+  alt req.user.role != 'admin'
+    ctrlInterviews -> modelInterview ++ : find({user: req.user.id})\n.populate('company', 'name description tel')
+  else admin with companyId
+    ctrlInterviews -> modelInterview : find({company: companyId})\n.populate('company', 'name description tel')
+  else admin
+    ctrlInterviews -> modelInterview : find()\n.populate('company', 'name description tel')
+  end
+  modelInterview -> dbInterviews ++ : InterviewSchema
+  dbInterviews --> modelInterview -- : interviews
+  modelInterview --> ctrlInterviews -- : interviews
+  ctrlInterviews --> client -- : 200 {success, count, data: interviews}
+end
+@enduml
+
+@startuml seq-11-get-interview
+title Get Single Interview (GET /api/v1/interviews/:id)
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:interviews" as routerInterviews
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:interviews" as ctrlInterviews
+participant "<<model>>\n:Interview" as modelInterview
+database "<<MongoDB>>\n:interviews" as dbInterviews
+
+client -> server ++ : req.get('/api/v1/interviews/:id')\nAuthorization: Bearer <token>
+server -> routerInterviews ++ : app.use('/api/v1/interviews', interviews)
+routerInterviews -> mwAuth ++ : protect()
+alt no token / invalid token
+  mwAuth --> client : 401
+else
+  mwAuth --> routerInterviews -- : next()
+  routerInterviews -> ctrlInterviews ++ : getInterview()
+  ctrlInterviews -> modelInterview ++ : findById(id).populate('company', 'name description tel')
+  modelInterview -> dbInterviews ++ : InterviewSchema
+  dbInterviews --> modelInterview -- : interview
+  modelInterview --> ctrlInterviews -- : interview
+  alt interview not found
+    ctrlInterviews --> client : 404 {message: "No interview found with id of ..."}
+  else not owner and not admin
+    ctrlInterviews --> client : 401 {message: "User ... is not authorized to view this interview"}
+  else
+    ctrlInterviews --> client -- : 200 {success, data: interview}
+  end
+end
+@enduml
+
+@startuml seq-12-add-interview
+title Add Interview (POST /api/v1/companies/:companyId/interviews) — user, admin
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:companies" as routerCompanies
+participant "<<router>>\n:interviews" as routerInterviews
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:interviews" as ctrlInterviews
+participant "<<model>>\n:Interview" as modelInterview
+participant "<<model>>\n:Company" as modelCompany
+database "<<MongoDB>>\n:interviews" as dbInterviews
+database "<<MongoDB>>\n:companies" as dbCompanies
+
+client -> server ++ : req.post('/api/v1/companies/:companyId/interviews')\nAuthorization: Bearer <token>
+server -> routerCompanies ++ : app.use('/api/v1/companies', companies)
+routerCompanies -> routerInterviews ++ : router.use('/:companyId/interviews', interviewRouter)
+routerInterviews -> mwAuth ++ : protect(), authorize('admin', 'user')
+alt not logged in / role not allowed
+  mwAuth --> client : 401 / 403
+else
+  mwAuth --> routerInterviews -- : next()
+  routerInterviews -> ctrlInterviews ++ : addInterview()
+  ctrlInterviews -> ctrlInterviews : req.body.user = req.user.id\nparseInterviewDate(req.body.interviewDate)
+  alt invalid date or not between May 10-13, 2022
+    ctrlInterviews --> client : 400 {message: "Interview date must be between May 10th and 13th, 2022"}
+  else
+    ctrlInterviews -> modelInterview ++ : find({user: req.user.id})
+    modelInterview -> dbInterviews ++ : InterviewSchema
+    dbInterviews --> modelInterview -- : existing interviews
+    modelInterview --> ctrlInterviews -- : existing interviews
+    alt already has 3 interviews and not admin
+      ctrlInterviews --> client : 400 {message: "... has already booked 3 interviews"}
+    else
+      ctrlInterviews -> modelCompany ++ : findById(companyId)
+      modelCompany -> dbCompanies ++ : CompanySchema
+      dbCompanies --> modelCompany -- : company
+      modelCompany --> ctrlInterviews -- : company
+      alt company not found
+        ctrlInterviews --> client : 404 {message: "No company with the id of ..."}
+      else
+        ctrlInterviews -> modelInterview ++ : create(req.body)
+        modelInterview -> dbInterviews ++ : InterviewSchema
+        dbInterviews --> modelInterview -- : interview
+        modelInterview --> ctrlInterviews -- : interview
+        ctrlInterviews --> client -- : 201 {success, data: interview}
+      end
+    end
+  end
+end
+@enduml
+
+@startuml seq-13-update-interview
+title Update Interview (PUT /api/v1/interviews/:id) — owner or admin
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:interviews" as routerInterviews
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:interviews" as ctrlInterviews
+participant "<<model>>\n:Interview" as modelInterview
+database "<<MongoDB>>\n:interviews" as dbInterviews
+
+client -> server ++ : req.put('/api/v1/interviews/:id')\nAuthorization: Bearer <token>
+server -> routerInterviews ++ : app.use('/api/v1/interviews', interviews)
+routerInterviews -> mwAuth ++ : protect(), authorize('admin', 'user')
+alt not logged in / role not allowed
+  mwAuth --> client : 401 / 403
+else
+  mwAuth --> routerInterviews -- : next()
+  routerInterviews -> ctrlInterviews ++ : updateInterview()
+  ctrlInterviews -> modelInterview ++ : findById(id)
+  modelInterview -> dbInterviews ++ : InterviewSchema
+  dbInterviews --> modelInterview -- : interview
+  modelInterview --> ctrlInterviews -- : interview
+  alt interview not found
+    ctrlInterviews --> client : 404 {message: "No interview with the id of ..."}
+  else not owner and not admin
+    ctrlInterviews --> client : 401 {message: "User ... is not authorized to update this interview"}
+  else
+    opt interviewDate in body
+      ctrlInterviews -> ctrlInterviews : parseInterviewDate(interviewDate)
+      alt invalid date or not between May 10-13, 2022
+        ctrlInterviews --> client : 400 {message: error}
+      end
+    end
+    ctrlInterviews -> modelInterview ++ : findByIdAndUpdate(id, req.body,\n{new: true, runValidators: true})
+    modelInterview -> dbInterviews ++ : InterviewSchema
+    dbInterviews --> modelInterview -- : interview
+    modelInterview --> ctrlInterviews -- : interview
+    ctrlInterviews --> client -- : 200 {success, data: interview}
+  end
+end
+@enduml
+
+@startuml seq-14-delete-interview
+title Delete Interview (DELETE /api/v1/interviews/:id) — owner or admin
+hide footbox
+participant "client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:interviews" as routerInterviews
+participant "<<middleware>>\n:auth" as mwAuth
+participant "<<controllers>>\n:interviews" as ctrlInterviews
+participant "<<model>>\n:Interview" as modelInterview
+database "<<MongoDB>>\n:interviews" as dbInterviews
+
+client -> server ++ : req.delete('/api/v1/interviews/:id')\nAuthorization: Bearer <token>
+server -> routerInterviews ++ : app.use('/api/v1/interviews', interviews)
+routerInterviews -> mwAuth ++ : protect(), authorize('admin', 'user')
+alt not logged in / role not allowed
+  mwAuth --> client : 401 / 403
+else
+  mwAuth --> routerInterviews -- : next()
+  routerInterviews -> ctrlInterviews ++ : deleteInterview()
+  ctrlInterviews -> modelInterview ++ : findById(id)
+  modelInterview -> dbInterviews ++ : InterviewSchema
+  dbInterviews --> modelInterview -- : interview
+  modelInterview --> ctrlInterviews -- : interview
+  alt interview not found
+    ctrlInterviews --> client : 404 {message: "No interview with the id of ..."}
+  else not owner and not admin
+    ctrlInterviews --> client : 401 {message: "User ... is not authorized to delete this interview"}
+  else
+    ctrlInterviews -> modelInterview ++ : interview.deleteOne()
+    modelInterview -> dbInterviews ++ : InterviewSchema
+    dbInterviews --> modelInterview -- : deleted
+    modelInterview --> ctrlInterviews --
+    ctrlInterviews --> client -- : 200 {success, data: {}}
+  end
+end
+@enduml
