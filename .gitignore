@@ -1,0 +1,4 @@
+JobnessBackend/node_modules/*
+JobnessBackend/config/config.env
+JobnessBackend/data
+reports
