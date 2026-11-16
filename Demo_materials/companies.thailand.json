@@ -1,0 +1,482 @@
+[
+  {
+    "name": "Siam Digital Studio (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Software",
+    "website": "https://siam-digital.example.com",
+    "description": "Fictional presentation company developing web and mobile applications. Location represents the Pathum Wan district centre.",
+    "tel": "020000001",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Chao Phraya Finance (Demo)",
+    "address": "Bang Rak, Bangkok, Thailand",
+    "industry": "Finance",
+    "website": "https://chao-phraya-finance.example.com",
+    "description": "Fictional presentation company building financial reporting tools. Location represents the Bang Rak district centre.",
+    "tel": "020000002",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5159599,
+        13.7239499
+      ],
+      "formattedAddress": "Bang Rak District, 10500, Thailand"
+    }
+  },
+  {
+    "name": "Sathon Business Consulting (Demo)",
+    "address": "Sathon, Bangkok, Thailand",
+    "industry": "Consulting",
+    "website": "https://sathon-consulting.example.com",
+    "description": "Fictional presentation company providing business analysis and operations consulting. Location represents the Sathon district centre.",
+    "tel": "020000003",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5305075,
+        13.7213584
+      ],
+      "formattedAddress": "Sathon District, 10120, Thailand"
+    }
+  },
+  {
+    "name": "Chatuchak Logistics (Demo)",
+    "address": "Chatuchak, Bangkok, Thailand",
+    "industry": "Logistics",
+    "website": "https://chatuchak-logistics.example.com",
+    "description": "Fictional presentation company developing delivery planning and warehouse systems. Location represents the Chatuchak district centre.",
+    "tel": "020000004",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5502304,
+        13.8030357
+      ],
+      "formattedAddress": "Chatuchak District, 10900, Thailand"
+    }
+  },
+  {
+    "name": "Lotus Cloud Systems (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Software",
+    "website": "https://lotus-cloud.example.com",
+    "description": "Fictional presentation company. Develops cloud infrastructure and business applications. Location represents the Pathum Wan district centre.",
+    "tel": "020000005",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Siam Structural Design (Demo)",
+    "address": "Bang Rak, Bangkok, Thailand",
+    "industry": "Engineering",
+    "website": "https://siam-structural.example.com",
+    "description": "Fictional presentation company. Provides structural design and engineering analysis. Location represents the Bang Rak district centre.",
+    "tel": "020000006",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5159599,
+        13.7239499
+      ],
+      "formattedAddress": "Bang Rak District, 10500, Thailand"
+    }
+  },
+  {
+    "name": "Bangkok Precision Works (Demo)",
+    "address": "Sathon, Bangkok, Thailand",
+    "industry": "Manufacturing",
+    "website": "https://bangkok-precision.example.com",
+    "description": "Fictional presentation company. Produces precision components and industrial equipment. Location represents the Sathon district centre.",
+    "tel": "020000007",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5305075,
+        13.7213584
+      ],
+      "formattedAddress": "Sathon District, 10120, Thailand"
+    }
+  },
+  {
+    "name": "Chatuchak Health Systems (Demo)",
+    "address": "Chatuchak, Bangkok, Thailand",
+    "industry": "Healthcare",
+    "website": "https://chatuchak-health.example.com",
+    "description": "Fictional presentation company. Builds appointment and patient management systems. Location represents the Chatuchak district centre.",
+    "tel": "020000008",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5502304,
+        13.8030357
+      ],
+      "formattedAddress": "Chatuchak District, 10900, Thailand"
+    }
+  },
+  {
+    "name": "Pathum Wan Retail Group (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Retail",
+    "website": "https://pathum-wan-retail.example.com",
+    "description": "Fictional presentation company. Operates lifestyle shops and online retail services. Location represents the Pathum Wan district centre.",
+    "tel": "020000009",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Riverfront Learning (Demo)",
+    "address": "Bang Rak, Bangkok, Thailand",
+    "industry": "Education",
+    "website": "https://riverfront-learning.example.com",
+    "description": "Fictional presentation company. Creates language courses and professional training programmes. Location represents the Bang Rak district centre.",
+    "tel": "020000010",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5159599,
+        13.7239499
+      ],
+      "formattedAddress": "Bang Rak District, 10500, Thailand"
+    }
+  },
+  {
+    "name": "Sathon Solar Solutions (Demo)",
+    "address": "Sathon, Bangkok, Thailand",
+    "industry": "Energy",
+    "website": "https://sathon-solar.example.com",
+    "description": "Fictional presentation company. Designs solar energy systems and monitoring software. Location represents the Sathon district centre.",
+    "tel": "020000011",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5305075,
+        13.7213584
+      ],
+      "formattedAddress": "Sathon District, 10120, Thailand"
+    }
+  },
+  {
+    "name": "Northern Line Media (Demo)",
+    "address": "Chatuchak, Bangkok, Thailand",
+    "industry": "Media",
+    "website": "https://northern-line-media.example.com",
+    "description": "Fictional presentation company. Produces digital campaigns and educational video content. Location represents the Chatuchak district centre.",
+    "tel": "020000012",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5502304,
+        13.8030357
+      ],
+      "formattedAddress": "Chatuchak District, 10900, Thailand"
+    }
+  },
+  {
+    "name": "Siam Community Services (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Other",
+    "website": "https://siam-community.example.com",
+    "description": "Fictional presentation company. Coordinates community events and shared workspaces. Location represents the Pathum Wan district centre.",
+    "tel": "020000013",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Bang Rak Data Labs (Demo)",
+    "address": "Bang Rak, Bangkok, Thailand",
+    "industry": "Software",
+    "website": "https://bang-rak-data.example.com",
+    "description": "Fictional presentation company. Develops analytics dashboards and data processing services. Location represents the Bang Rak district centre.",
+    "tel": "020000014",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5159599,
+        13.7239499
+      ],
+      "formattedAddress": "Bang Rak District, 10500, Thailand"
+    }
+  },
+  {
+    "name": "Sathon Capital Analytics (Demo)",
+    "address": "Sathon, Bangkok, Thailand",
+    "industry": "Finance",
+    "website": "https://sathon-capital.example.com",
+    "description": "Fictional presentation company. Creates budgeting and financial analytics applications. Location represents the Sathon district centre.",
+    "tel": "020000015",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5305075,
+        13.7213584
+      ],
+      "formattedAddress": "Sathon District, 10120, Thailand"
+    }
+  },
+  {
+    "name": "Chatuchak Engineering Studio (Demo)",
+    "address": "Chatuchak, Bangkok, Thailand",
+    "industry": "Engineering",
+    "website": "https://chatuchak-engineering.example.com",
+    "description": "Fictional presentation company. Designs mechanical systems and automation equipment. Location represents the Chatuchak district centre.",
+    "tel": "020000016",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5502304,
+        13.8030357
+      ],
+      "formattedAddress": "Chatuchak District, 10900, Thailand"
+    }
+  },
+  {
+    "name": "Lotus Packaging Works (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Manufacturing",
+    "website": "https://lotus-packaging.example.com",
+    "description": "Fictional presentation company. Develops packaging materials and production processes. Location represents the Pathum Wan district centre.",
+    "tel": "020000017",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Riverfront Care Technology (Demo)",
+    "address": "Bang Rak, Bangkok, Thailand",
+    "industry": "Healthcare",
+    "website": "https://riverfront-care.example.com",
+    "description": "Fictional presentation company. Creates digital tools for clinic operations and care coordination. Location represents the Bang Rak district centre.",
+    "tel": "020000018",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5159599,
+        13.7239499
+      ],
+      "formattedAddress": "Bang Rak District, 10500, Thailand"
+    }
+  },
+  {
+    "name": "Sathon Market Online (Demo)",
+    "address": "Sathon, Bangkok, Thailand",
+    "industry": "Retail",
+    "website": "https://sathon-market.example.com",
+    "description": "Fictional presentation company. Manages an online marketplace for household products. Location represents the Sathon district centre.",
+    "tel": "020000019",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5305075,
+        13.7213584
+      ],
+      "formattedAddress": "Sathon District, 10120, Thailand"
+    }
+  },
+  {
+    "name": "Chatuchak Strategy Partners (Demo)",
+    "address": "Chatuchak, Bangkok, Thailand",
+    "industry": "Consulting",
+    "website": "https://chatuchak-strategy.example.com",
+    "description": "Fictional presentation company. Provides operations planning and business research services. Location represents the Chatuchak district centre.",
+    "tel": "020000020",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5502304,
+        13.8030357
+      ],
+      "formattedAddress": "Chatuchak District, 10900, Thailand"
+    }
+  },
+  {
+    "name": "Siam Learning Studio (Demo)",
+    "address": "Pathum Wan, Bangkok, Thailand",
+    "industry": "Education",
+    "website": "https://siam-learning.example.com",
+    "description": "Fictional presentation company. Develops online courses and classroom learning resources. Location represents the Pathum Wan district centre.",
+    "tel": "020000021",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        100.5310235,
+        13.7461522
+      ],
+      "formattedAddress": "Pathum Wan District, 10330, Thailand"
+    }
+  },
+  {
+    "name": "Hua Hin Clean Energy (Demo)",
+    "address": "Hua Hin, Prachuap Khiri Khan, Thailand",
+    "industry": "Energy",
+    "website": "https://hua-hin-clean-energy.example.com",
+    "description": "Fictional presentation company. Builds energy monitoring and efficiency management tools. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000022",
+    "location": {
+      "coordinates": [
+        99.9573437,
+        12.5699326
+      ],
+      "formattedAddress": "Hua Hin City Municipality, Hua Hin District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Hua Hin Delivery Systems (Demo)",
+    "address": "Hua Hin, Prachuap Khiri Khan, Thailand",
+    "industry": "Logistics",
+    "website": "https://hua-hin-delivery-systems.example.com",
+    "description": "Fictional presentation company. Develops shipment tracking and delivery scheduling systems. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000023",
+    "location": {
+      "coordinates": [
+        99.9573437,
+        12.5699326
+      ],
+      "formattedAddress": "Hua Hin City Municipality, Hua Hin District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Hua Hin Creative Media (Demo)",
+    "address": "Hua Hin, Prachuap Khiri Khan, Thailand",
+    "industry": "Media",
+    "website": "https://hua-hin-creative-media.example.com",
+    "description": "Fictional presentation company. Produces photography, animation, and digital publishing projects. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000024",
+    "location": {
+      "coordinates": [
+        99.9573437,
+        12.5699326
+      ],
+      "formattedAddress": "Hua Hin City Municipality, Hua Hin District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Pak Kret Event Services (Demo)",
+    "address": "Pak Kret, Nonthaburi, Thailand",
+    "industry": "Other",
+    "website": "https://pak-kret-event-services.example.com",
+    "description": "Fictional presentation company. Plans exhibitions, workshops, and community events. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000025",
+    "location": {
+      "coordinates": [
+        100.4974327,
+        13.9120701
+      ],
+      "formattedAddress": "Pak Kret City Municipality, Pak Kret District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Pak Kret Application Studio (Demo)",
+    "address": "Pak Kret, Nonthaburi, Thailand",
+    "industry": "Software",
+    "website": "https://pak-kret-application-studio.example.com",
+    "description": "Fictional presentation company. Builds mobile applications and customer service platforms. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000026",
+    "location": {
+      "coordinates": [
+        100.4974327,
+        13.9120701
+      ],
+      "formattedAddress": "Pak Kret City Municipality, Pak Kret District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Pak Kret Financial Tools (Demo)",
+    "address": "Pak Kret, Nonthaburi, Thailand",
+    "industry": "Finance",
+    "website": "https://pak-kret-financial-tools.example.com",
+    "description": "Fictional presentation company. Develops expense tracking and accounting software. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000027",
+    "location": {
+      "coordinates": [
+        100.4974327,
+        13.9120701
+      ],
+      "formattedAddress": "Pak Kret City Municipality, Pak Kret District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Hat Yai Robotics (Demo)",
+    "address": "Hat Yai, Songkhla, Thailand",
+    "industry": "Engineering",
+    "website": "https://hat-yai-robotics.example.com",
+    "description": "Fictional presentation company. Designs robotics prototypes and industrial control systems. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000028",
+    "location": {
+      "coordinates": [
+        100.4689889,
+        7.0074644
+      ],
+      "formattedAddress": "Hatyai city municipality, Hat Yai District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Hat Yai Sustainable Products (Demo)",
+    "address": "Hat Yai, Songkhla, Thailand",
+    "industry": "Manufacturing",
+    "website": "https://hat-yai-sustainable-products.example.com",
+    "description": "Fictional presentation company. Develops reusable consumer products and packaging. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000029",
+    "location": {
+      "coordinates": [
+        100.4689889,
+        7.0074644
+      ],
+      "formattedAddress": "Hatyai city municipality, Hat Yai District, Thailand",
+      "type": "Point"
+    }
+  },
+  {
+    "name": "Hat Yai Wellness Technology (Demo)",
+    "address": "Hat Yai, Songkhla, Thailand",
+    "industry": "Healthcare",
+    "website": "https://hat-yai-wellness-technology.example.com",
+    "description": "Fictional presentation company. Builds scheduling and reporting tools for wellness services. Location represents the municipality centre for this fictional presentation company.",
+    "tel": "020000030",
+    "location": {
+      "coordinates": [
+        100.4689889,
+        7.0074644
+      ],
+      "formattedAddress": "Hatyai city municipality, Hat Yai District, Thailand",
+      "type": "Point"
+    }
+  }
+]

@@ -1976,6 +1976,697 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "13 Extra Requirements - Company Search",
+      "description": "Import the updated companies.thailand.json before this demo. Run the original setup and registration steps, then this folder in order; alternatively set userAEmail and password to an existing account. Location requests require OpenCage access. For Runner, use a 1200 ms request delay. Inspect searchLocation for the resolved address, coordinates and effective radius. The current default radius is 5 km. Demo locations include Bangkok districts, Hua Hin, Pak Kret and Hat Yai; seed coordinates represent district or municipality centres.",
+      "item": [
+        {
+          "name": "01 Login for extra requirement demo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userAEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Run the original registration steps first, or set userAEmail and password to an existing account. This request stores extraDemoToken for this folder."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset(\"extraDemoToken\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login succeeds\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Token returned\", () => pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty);",
+                  "if (pm.response.code === 200) pm.collectionVariables.set(\"extraDemoToken\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "02 Name - partial match siam",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Show partial matching. Every returned company name contains siam.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?name=siam",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "siam"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.total).to.be.at.least(res.count); });",
+                  "pm.test(\"Every name contains siam\", () => { pm.expect(res.count).to.be.above(0); res.data.forEach(c => pm.expect(c.name.toLowerCase()).to.include(\"siam\")); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "03 Name - uppercase SIAM",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Compare with request 02 to demonstrate case-insensitive matching.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?name=SIAM",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "SIAM"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.total).to.be.at.least(res.count); });",
+                  "pm.test(\"Every name contains siam\", () => { pm.expect(res.count).to.be.above(0); res.data.forEach(c => pm.expect(c.name.toLowerCase()).to.include(\"siam\")); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "04 Industry - Software",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Show a single industry filter.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?industry=Software",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "industry",
+                  "value": "Software"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.total).to.be.at.least(res.count); });",
+                  "pm.test(\"Software only\", () => { pm.expect(res.count).to.be.above(0); res.data.forEach(c => pm.expect(c.industry).to.eql(\"Software\")); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "05 Industry - software and finance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Show multiple industries and case-insensitive industry input.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?industry=software%2Cfinance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "industry",
+                  "value": "software,finance"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.total).to.be.at.least(res.count); });",
+                  "pm.test(\"Selected industries only\", () => { pm.expect(res.count).to.be.above(0); res.data.forEach(c => pm.expect([\"Software\", \"Finance\"]).to.include(c.industry)); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "06 Location - Pathum Wan default 5 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Pathum Wan, Bangkok, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Pathum+Wan%2C+Bangkok%2C+Thailand",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Pathum Wan, Bangkok, Thailand"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(5); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "07 Location - Sathon within 1 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Sathon, Bangkok, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Sathon%2C+Bangkok%2C+Thailand&radiusKm=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Sathon, Bangkok, Thailand"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(1); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "08 Location - Chatuchak within 1 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Chatuchak, Bangkok, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Chatuchak%2C+Bangkok%2C+Thailand&radiusKm=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Chatuchak, Bangkok, Thailand"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(1); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "09 Combined - name industry and location",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Combine name siam, industry Software and a 1 km radius around Pathum Wan. All filters apply together. Inspect searchLocation for the query coordinates.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?name=siam&industry=Software&address=Pathum+Wan%2C+Bangkok%2C+Thailand&radiusKm=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "siam"
+                },
+                {
+                  "key": "industry",
+                  "value": "Software"
+                },
+                {
+                  "key": "address",
+                  "value": "Pathum Wan, Bangkok, Thailand"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.total).to.be.at.least(res.count); });",
+                  "pm.test(\"Every name contains siam\", () => { pm.expect(res.count).to.be.above(0); res.data.forEach(c => pm.expect(c.name.toLowerCase()).to.include(\"siam\")); });",
+                  "pm.test(\"Software only\", () => res.data.forEach(c => pm.expect(c.industry).to.eql(\"Software\")));",
+                  "pm.test(\"Companies are within 1 km of the verified Pathum Wan centre\", () => {\n  pm.expect(res.count).to.be.above(0);\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - 13.7461522) / 2) ** 2 + Math.cos(radians(13.7461522)) * Math.cos(radians(lat)) * Math.sin(radians(lng - 100.5310235) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(1 + 0.05);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "10 Location - Hua Hin default 5 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Hua Hin, Prachuap Khiri Khan, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Hua+Hin%2C+Prachuap+Khiri+Khan%2C+Thailand",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Hua Hin, Prachuap Khiri Khan, Thailand"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(5); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "11 Location - Pak Kret default 5 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Pak Kret, Nonthaburi, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Pak+Kret%2C+Nonthaburi%2C+Thailand",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Pak Kret, Nonthaburi, Thailand"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(5); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "12 Location - Hat Yai default 5 km",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Search around Hat Yai, Songkhla, Thailand. Inspect searchLocation to see the resolved coordinates and radius. Demo company coordinates represent the district or municipality centre.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Hat+Yai%2C+Songkhla%2C+Thailand",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Hat Yai, Songkhla, Thailand"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Successful company list\", () => { pm.expect(res.success).to.eql(true); pm.expect(res.data).to.be.an(\"array\"); pm.expect(res.count).to.eql(res.data.length); pm.expect(res.count).to.be.above(0); });",
+                  "pm.test(\"Search location and radius are returned\", () => { pm.expect(res.searchLocation.formattedAddress).to.be.a(\"string\").and.not.empty; pm.expect(res.searchLocation.latitude).to.be.a(\"number\"); pm.expect(res.searchLocation.longitude).to.be.a(\"number\"); pm.expect(res.searchLocation.radiusKm).to.eql(5); });",
+                  "pm.test(\"Every company is within the returned search radius\", () => {\n  const centre = res.searchLocation;\n  const radians = value => value * Math.PI / 180;\n  res.data.forEach(company => {\n    pm.expect(company.location.type).to.eql(\"Point\");\n    const [lng, lat] = company.location.coordinates;\n    const a = Math.sin(radians(lat - centre.latitude) / 2) ** 2 + Math.cos(radians(centre.latitude)) * Math.cos(radians(lat)) * Math.sin(radians(lng - centre.longitude) / 2) ** 2;\n    const distanceKm = 6378.1 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));\n    pm.expect(distanceKm).to.be.at.most(centre.radiusKm + 0.001);\n  });\n});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "13 Validation - invalid industry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Demonstrate HTTP 400 for an unsupported industry.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?industry=InvalidIndustry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "industry",
+                  "value": "InvalidIndustry"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Invalid input is rejected\", () => pm.expect(res.success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "14 Validation - zero radius",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Demonstrate HTTP 400. An explicit zero radius is invalid.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Pathum+Wan%2C+Bangkok%2C+Thailand&radiusKm=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Pathum Wan, Bangkok, Thailand"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Invalid input is rejected\", () => pm.expect(res.success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "15 Validation - empty radius",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{extraDemoToken}}"
+              }
+            ],
+            "description": "Demonstrate HTTP 400. The default applies when radiusKm is omitted. This request supplies an empty value.",
+            "url": {
+              "raw": "{{baseUrl}}/companies?address=Pathum+Wan%2C+Bangkok%2C+Thailand&radiusKm=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "address",
+                  "value": "Pathum Wan, Bangkok, Thailand"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Invalid input is rejected\", () => pm.expect(res.success).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
