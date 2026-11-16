@@ -1,0 +1,212 @@
+@startuml Jobness_UML_Profile
+' Class Diagram (UML Profile for RESTful API) — Jobness Backend
+' Derived from JobnessBackend/routes, controllers and models.
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+  BackgroundColor<<Application>> #DCEBFA
+  BackgroundColor<<Resource>> #FFF4D6
+  BackgroundColor<<Representation>> #E3F4E1
+  BackgroundColor<<enumeration>> #EFE3F7
+  BackgroundColor<<dataType>> #F2F2F2
+}
+hide empty members
+hide circle
+
+title Jobness Backend — Class Diagram (UML Profile)
+
+' =========================
+' Application
+' =========================
+class JobnessService <<Application>>
+note top of JobnessService : Base URL: /api/v1
+
+' =========================
+' Resources: Companies
+' =========================
+class Companies <<Resource>> {
+  <<GET>> +getCompanies(): Company[*]
+  <<POST>> +createCompany(): Company
+}
+
+class "Company" as CompanyRes <<Resource>> {
+  <<GET>> +getCompany(): Company
+  <<PUT>> +updateCompany(): Company
+  <<DELETE>> +deleteCompany(): void
+}
+
+class "Interviews" as CompanyInterviewsRes <<Resource>> {
+  <<GET>> +getInterviews(): Interview[*]
+  <<POST>> +addInterview(): Interview
+}
+
+' =========================
+' Resources: Interviews
+' =========================
+class "Interviews" as InterviewsRes <<Resource>> {
+  <<GET>> +getInterviews(): Interview[*]
+}
+
+class "Interview" as InterviewRes <<Resource>> {
+  <<GET>> +getInterview(): Interview
+  <<PUT>> +updateInterview(): Interview
+  <<DELETE>> +deleteInterview(): void
+}
+
+' =========================
+' Resources: Auth
+' =========================
+class Auth <<Resource>>
+
+class Register <<Resource>> {
+  <<POST>> +register(): AuthToken
+}
+
+class Login <<Resource>> {
+  <<POST>> +login(): AuthToken
+}
+
+class Me <<Resource>> {
+  <<GET>> +getMe(): User
+}
+
+class Logout <<Resource>> {
+  <<GET>> +logout(): void
+}
+
+' =========================
+' Representations
+' =========================
+class "Company" as CompanyRep <<Representation>> {
+  -name: String {unique}
+  -address: String
+  -industry: Industry
+  -website: String
+  -description: String
+  -tel: String
+}
+
+class GeoPoint <<dataType>> {
+  -type: String = "Point"
+  -coordinates: Number[2] {[lng, lat]}
+  -formattedAddress: String
+}
+
+class "Interview" as InterviewRep <<Representation>> {
+  -interviewDate: Date
+  -createdAt: Date
+}
+
+class User <<Representation>> {
+  -name: String
+  -telephone: String
+  -email: String {unique}
+  -role: Role
+  -password: String
+  -resetPasswordToken: String
+  -resetPasswordExpire: Date
+  -createdAt: Date
+  +getSignedJwtToken(): String
+  +matchPassword(enteredPassword: String): Boolean
+}
+
+class AuthToken <<Representation>> {
+  -_id: ObjectId
+  -name: String
+  -email: String
+  -token: String
+}
+
+enum Industry <<enumeration>> {
+  Software
+  Finance
+  Engineering
+  Manufacturing
+  Healthcare
+  Retail
+  Consulting
+  Education
+  Energy
+  Logistics
+  Media
+  Other
+}
+
+enum Role <<enumeration>> {
+  user
+  admin
+}
+
+' =========================
+' Paths (resource hierarchy)
+' =========================
+JobnessService --> Companies : <<Path>>\n{path = "/companies"}
+Companies --> CompanyRes : <<Path>>\n{path = "/{companyId}"}
+CompanyRes --> CompanyInterviewsRes : <<Path>>\n{path = "/interviews"}
+CompanyInterviewsRes --> InterviewRes : <<Path>>\n{path = "/{interviewId}"}
+
+JobnessService --> InterviewsRes : <<Path>>\n{path = "/interviews"}
+InterviewsRes --> InterviewRes : <<Path>>\n{path = "/{interviewId}"}
+
+JobnessService --> Auth : <<Path>>\n{path = "/auth"}
+Auth --> Register : <<Path>>\n{path = "/register"}
+Auth --> Login : <<Path>>\n{path = "/login"}
+Auth --> Me : <<Path>>\n{path = "/me"}
+Auth --> Logout : <<Path>>\n{path = "/logout"}
+
+' =========================
+' Resource -> Representation
+' =========================
+Companies ..> CompanyRep : <<use>>
+CompanyRes ..> CompanyRep : <<use>>
+CompanyInterviewsRes ..> InterviewRep : <<use>>
+InterviewsRes ..> InterviewRep : <<use>>
+InterviewRes ..> InterviewRep : <<use>>
+Register ..> AuthToken : <<use>>
+Login ..> AuthToken : <<use>>
+Me ..> User : <<use>>
+
+' =========================
+' Relationships between representations
+' =========================
+CompanyRep *-- "0..1" GeoPoint : location
+CompanyRep ..> Industry
+User ..> Role
+InterviewRep "0..*" --> "1" User : user
+InterviewRep "0..*" --> "1" CompanyRep : company
+
+' =========================
+' Business rules / access control
+' =========================
+note left of Companies
+  getCompanies query parameters:
+  - name (partial, case-insensitive)
+  - industry (one or comma-separated)
+  - address + radiusKm (address geocoded by backend)
+    or lat + lng + radiusKm
+  - select, sort, page, limit
+end note
+
+note right of CompanyInterviewsRes
+  addInterview:
+  - interviewDate must be May 10–13, 2022
+  - a non-admin user can book at most 3 interviews
+end note
+
+legend right
+  |= Operation |= Access |
+  | getCompanies | logged-in user |
+  | getCompany | public |
+  | createCompany / updateCompany / deleteCompany | admin |
+  | getInterviews | logged-in (user: own only, admin: all) |
+  | getInterview / updateInterview / deleteInterview | owner or admin |
+  | addInterview | user, admin |
+  | register / login / logout | public |
+  | getMe | logged-in user |
+  createCompany / updateCompany / getCompanies (address search)
+  geocode the address via OpenCage API
+endlegend
+
+@enduml
