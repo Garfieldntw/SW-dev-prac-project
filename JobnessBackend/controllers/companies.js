@@ -41,7 +41,7 @@ const queryText = (value) => (typeof value === 'string' ? value.trim() : '');
 // Strict number parsing: rejects '', '12abc', 'Infinity'
 const toNumber = (text) => (text !== '' && Number.isFinite(Number(text)) ? Number(text) : NaN);
 
-// Builds the search filter from req.query. Returns { filter } or { error } (a 400 message).
+// Returns the filter and optional searchLocation, or an error (a 400 message).
 const buildCompanyFilter = async (query) => {
     // Apply the default only when a location is supplied and the radius is omitted.
     const hasLocation = ['address', 'lat', 'lng'].some(field => query[field] !== undefined);
@@ -79,6 +79,8 @@ const buildCompanyFilter = async (query) => {
     // Resolve the search address in the backend before applying the distance filter.
     // Coordinate parameters remain supported for existing callers.
     let searchQuery = query;
+    let formattedAddress = null;
+    let searchLocation;
     if (query.address !== undefined) {
         const address = queryText(query.address);
         if (address.length < 2) {
@@ -99,6 +101,7 @@ const buildCompanyFilter = async (query) => {
             throw new GeocodingError('Address matches multiple locations; please provide a more specific address', 422);
         }
         searchQuery = { ...query, lat: String(matches[0].latitude), lng: String(matches[0].longitude) };
+        formattedAddress = matches[0].label;
     }
 
     // Distance: straight-line distance from the resolved or supplied coordinates.
@@ -125,9 +128,10 @@ const buildCompanyFilter = async (query) => {
         filter.location = {
             $geoWithin: { $centerSphere: [[lng, lat], radiusKm / EARTH_RADIUS_KM] }
         };
+        searchLocation = { formattedAddress, latitude: lat, longitude: lng, radiusKm };
     }
 
-    return { filter };
+    return { filter, searchLocation };
 };
 
 //@desc    Get all companies (filter by name, industry and distance from a point)
@@ -135,7 +139,7 @@ const buildCompanyFilter = async (query) => {
 //access   Private
 exports.getCompanies = async (req, res) => {
     try {
-        const { filter, error } = await buildCompanyFilter(req.query);
+        const { filter, searchLocation, error } = await buildCompanyFilter(req.query);
         if (error) {
             return res.status(400).json({ success: false, message: error });
         }
@@ -183,7 +187,7 @@ exports.getCompanies = async (req, res) => {
             };
         }
 
-        res.status(200).json({ success: true, count: companies.length, total, pagination, data: companies });
+        res.status(200).json({ success: true, count: companies.length, total, pagination, searchLocation, data: companies });
     }
     catch (err) {
         if (err instanceof GeocodingError) {
